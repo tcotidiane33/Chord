@@ -1,0 +1,39 @@
+JChord 0.1 (2008-11-05) 
+
+JChord is a simple implementation of Chord protocol written in Java. 
+Chord is a simple and popular DHT protocol. JChord is developed for 
+the purpose of understanding, teaching, simulating, and developing 
+new algorithms over Chord. To make it tooooo simple, only the original 
+lookup and stabilization operations are implemented in a single VM and 
+a single thread. Although JChord contains no documentation, 
+it is easy-to-read and intuitively understandable. 
+
+Copyright (C) 2008-2008 Joonion Bae
+
+Authors: Joonion Bae(joonion@gmail.com)
+
+
+SEE:
+   kmaru.jchord : contains Java Chord implementation.
+   kmaru.jchord.test : contains the main() method. 
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published 
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
+You should have received a copy of the GNU General Public License
+along with this program (see LICENSE); if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307,
+USA, or send email to Joonion Bae(joonion@gmail.com).
+
+
+Une simple implémentation Java du protocole Chord. JChord est une implémentation simple du protocole Chord écrit en Java. Chord est un protocole DHT simple et populaire. JChord est développé dans le but de comprendre, d'enseigner, de simuler et de développer de nouveaux algorithmes sur Chord. Pour rendre les choses trop simples, seules les opérations de recherche et de stabilisation d'origine sont implémentées dans une seule VM et un seul thread. Bien que JChord ne contienne aucune documentation, il est facile à lire et intuitivement compréhensible.
