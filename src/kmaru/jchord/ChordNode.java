@@ -1,53 +1,51 @@
 package kmaru.jchord;
 
 import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ChordNode {
 
 	String nodeId;
-
 	ChordKey nodeKey;
-
 	ChordNode predecessor;
-
 	ChordNode successor;
-
 	FingerTable fingerTable;
+	Map<String, String> data; // Structure de données pour stocker les données
 
 	public ChordNode(String nodeId) {
 		this.nodeId = nodeId;
 		this.nodeKey = new ChordKey(nodeId);
 		this.fingerTable = new FingerTable(this);
 		this.create();
+		this.data = new HashMap<>(); // Initialisation de la structure de données
 	}
 
-	/**
-	 * Lookup a successor of given identifier
-	 * 
-	 * @param identifier
-	 *            an identifier to lookup
-	 * @return the successor of given identifier
-	 */
+	// Structure de données pour stocker les données du nœud
+	private Map<String, String> data;
+
+
+	// Méthode pour ajouter des données au nœud
+	public void addData(String key, String value) {
+		data.put(key, value);
+	}
+
+	// Méthode pour récupérer les données du nœud associées à une clé donnée
+	public String getData(String key) {
+		return data.get(key);
+	}
+
 	public ChordNode findSuccessor(String identifier) {
 		ChordKey key = new ChordKey(identifier);
 		return findSuccessor(key);
 	}
 
-	/**
-	 * Lookup a successor of given key
-	 * 
-	 * @param identifier
-	 *            an identifier to lookup
-	 * @return the successor of given identifier
-	 */
 	public ChordNode findSuccessor(ChordKey key) {
-
 		if (this == successor) {
 			return this;
 		}
 
-		if (key.isBetween(this.getNodeKey(), successor.getNodeKey())
-				|| key.compareTo(successor.getNodeKey()) == 0) {
+		if (key.isBetween(this.getNodeKey(), successor.getNodeKey()) || key.compareTo(successor.getNodeKey()) == 0) {
 			return successor;
 		} else {
 			ChordNode node = closestPrecedingNode(key);
@@ -69,35 +67,21 @@ public class ChordNode {
 		return this;
 	}
 
-	/**
-	 * Creates a new Chord ring.
-	 */
 	public void create() {
 		predecessor = null;
 		successor = this;
 	}
 
-	/**
-	 * Joins a Chord ring with a node in the Chord ring
-	 * 
-	 * @param node
-	 *            a bootstrapping node
-	 */
 	public void join(ChordNode node) {
 		predecessor = null;
 		successor = node.findSuccessor(this.getNodeId());
 	}
 
-	/**
-	 * Verifies the successor, and tells the successor about this node. Should
-	 * be called periodically.
-	 */
 	public void stabilize() {
 		ChordNode node = successor.getPredecessor();
 		if (node != null) {
 			ChordKey key = node.getNodeKey();
-			if ((this == successor)
-					|| key.isBetween(this.getNodeKey(), successor.getNodeKey())) {
+			if ((this == successor) || key.isBetween(this.getNodeKey(), successor.getNodeKey())) {
 				successor = node;
 			}
 		}
@@ -106,15 +90,11 @@ public class ChordNode {
 
 	private void notifyPredecessor(ChordNode node) {
 		ChordKey key = node.getNodeKey();
-		if (predecessor == null
-				|| key.isBetween(predecessor.getNodeKey(), this.getNodeKey())) {
+		if (predecessor == null || key.isBetween(predecessor.getNodeKey(), this.getNodeKey())) {
 			predecessor = node;
 		}
 	}
 
-	/**
-	 * Refreshes finger table entries.
-	 */
 	public void fixFingers() {
 		for (int i = 0; i < Hash.KEY_LENGTH; i++) {
 			Finger finger = fingerTable.getFinger(i);
@@ -185,5 +165,6 @@ public class ChordNode {
 	public void setFingerTable(FingerTable fingerTable) {
 		this.fingerTable = fingerTable;
 	}
+
 
 }
