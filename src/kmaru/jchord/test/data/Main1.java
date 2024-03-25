@@ -95,8 +95,8 @@ public class Main1 {
                     if (node != null) {
                         // Afficher les données du nœud
                         System.out.println("Content of node " + nodeId + ": ");
-                        for (String key : node.getData().keySet()) {
-                            System.out.println("Key: " + key + ", Value: " + node.getData(key));
+                        for (Map.Entry<String, String> entry : node.getAllData().entrySet()) {
+                            System.out.println("Key: " + entry.getKey() + ", Value: " + entry.getValue());
                         }
 
                     } else {

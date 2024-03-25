@@ -7,6 +7,7 @@ import java.util.TreeMap;
 
 public class Chord {
 
+
 	private List<ChordNode> nodeList = new ArrayList<>();
 	private SortedMap<ChordKey, ChordNode> sortedNodeMap = new TreeMap<>();
 	private Object[] sortedKeyArray;
@@ -38,6 +39,15 @@ public class Chord {
 		return findSuccessor(chordKey);
 	}
 
+	public void dropNode(int index) {
+		if (index >= 0 && index < nodeList.size()) {
+			nodeList.remove(index);
+			System.out.println("Node at index " + index + " removed successfully.");
+		} else {
+			System.out.println("Invalid node index.");
+		}
+	}
+
 	public ChordNode findSuccessor(ChordKey key) {
 		if (sortedNodeMap.isEmpty()) {
 			return null;
@@ -50,4 +60,9 @@ public class Chord {
 		ChordNode successor = sortedNodeMap.get(sortedNodeMap.tailMap(key).firstKey());
 		return successor != null ? successor : sortedNodeMap.get(sortedNodeMap.firstKey());
 	}
+
+	public int size() {
+		return nodeList.size();
+	}
+
 }

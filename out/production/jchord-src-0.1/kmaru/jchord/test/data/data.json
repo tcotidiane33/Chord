@@ -1,0 +1,36 @@
+{
+  "etudiants": [
+    {
+      "id": 101,
+      "nom": "Dubois",
+      "niveau": "Licence"
+    },
+    {
+      "id": 102,
+      "nom": "Bernard",
+      "niveau": "Master"
+    },
+    {
+      "id": 103,
+      "nom": "Lefebvre",
+      "niveau": "Doctorat"
+    }
+  ],
+  "professeurs": [
+    {
+      "id": 1,
+      "nom": "Dupont",
+      "matiere": "Mathématiques"
+    },
+    {
+      "id": 2,
+      "nom": "Martin",
+      "matiere": "Physique"
+    },
+    {
+      "id": 3,
+      "nom": "Durand",
+      "matiere": "Informatique"
+    }
+  ]
+}

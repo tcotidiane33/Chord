@@ -1,7 +1,9 @@
 package kmaru.jchord;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ChordNode {
@@ -12,17 +14,21 @@ public class ChordNode {
 	ChordNode successor;
 	FingerTable fingerTable;
 	Map<String, String> data; // Structure de données pour stocker les données
+	private String nodeUrl;
+
 
 	public ChordNode(String nodeId) {
 		this.nodeId = nodeId;
+		this.nodeUrl = nodeUrl;
 		this.nodeKey = new ChordKey(nodeId);
 		this.fingerTable = new FingerTable(this);
 		this.create();
 		this.data = new HashMap<>(); // Initialisation de la structure de données
 	}
-
-	// Structure de données pour stocker les données du nœud
-	private Map<String, String> data;
+	// Ajouter cette méthode à la classe ChordNode
+	public Map<String, String> getAllData() {
+		return this.data;
+	}
 
 
 	// Méthode pour ajouter des données au nœud
@@ -166,5 +172,41 @@ public class ChordNode {
 		this.fingerTable = fingerTable;
 	}
 
+	// Structure de données pour stocker les noms de fichiers sur le nœud
+	private List<String> files;
+
+	// Constructeur de la classe ChordNode
+	public ChordNode() {
+		// Initialisation de la liste des fichiers
+		this.files = new ArrayList<>();
+	}
+
+	// Méthode pour ajouter un fichier au nœud
+	public void addFile(String fileName) {
+		this.files.add(fileName);
+	}
+
+	// Méthode pour obtenir la liste des fichiers sur le nœud
+	public List<String> getFiles() {
+		return this.files;
+	}
+
+	// Méthode pour lire un fichier à partir du nœud
+	public String readFile(String fileName) {
+		// Parcourir la liste des fichiers pour rechercher le fichier spécifié
+		for (String file : files) {
+			if (file.equals(fileName)) {
+				// Si le fichier est trouvé, vous pouvez le lire ici
+				// Par exemple, vous pouvez lire le contenu du fichier et le retourner
+				return "Contenu du fichier " + fileName;
+			}
+		}
+		// Si le fichier n'est pas trouvé, vous pouvez retourner un message indiquant qu'il n'existe pas
+		return "Le fichier " + fileName + " n'existe pas sur ce nœud.";
+	}
+
+	public String getNodeUrl() {
+		return nodeUrl;
+	}
 
 }
