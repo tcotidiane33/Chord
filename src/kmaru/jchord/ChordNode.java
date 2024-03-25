@@ -15,16 +15,17 @@ public class ChordNode {
 	FingerTable fingerTable;
 	Map<String, String> data; // Structure de données pour stocker les données
 	private String nodeUrl;
+	private List<String> files;
 
 
 	public ChordNode(String nodeId) {
 		this.nodeId = nodeId;
-		this.nodeUrl = nodeUrl;
 		this.nodeKey = new ChordKey(nodeId);
 		this.fingerTable = new FingerTable(this);
 		this.create();
 		this.data = new HashMap<>(); // Initialisation de la structure de données
 	}
+
 	// Ajouter cette méthode à la classe ChordNode
 	public Map<String, String> getAllData() {
 		return this.data;
@@ -60,6 +61,13 @@ public class ChordNode {
 			}
 			return node.findSuccessor(key);
 		}
+	}
+
+	public void stopNode() {
+		// Logique pour arrêter le nœud
+		// Par exemple :
+		// Fermer les connexions, arrêter les threads, libérer les ressources, etc.
+		System.out.println("Node stopped.");
 	}
 
 	private ChordNode closestPrecedingNode(ChordKey key) {
@@ -172,26 +180,31 @@ public class ChordNode {
 		this.fingerTable = fingerTable;
 	}
 
-	// Structure de données pour stocker les noms de fichiers sur le nœud
-	private List<String> files;
-
-	// Constructeur de la classe ChordNode
-	public ChordNode() {
-		// Initialisation de la liste des fichiers
-		this.files = new ArrayList<>();
+	public String getNodeUrl() {
+		return nodeUrl;
 	}
 
-	// Méthode pour ajouter un fichier au nœud
-	public void addFile(String fileName) {
-		this.files.add(fileName);
+	public String readData(String key) {
+		ChordNode responsibleNode = findSuccessor(key);
+		if (responsibleNode != null) {
+			return responsibleNode.getData(key);
+		} else {
+			return null; // Ou une valeur par défaut, ou lever une exception selon le cas
+		}
 	}
 
-	// Méthode pour obtenir la liste des fichiers sur le nœud
+	public void removeData(String key) {
+		data.remove(key);
+	}
+
+	public ChordNode getSucc() {
+		return successor;
+	}
+
 	public List<String> getFiles() {
 		return this.files;
 	}
 
-	// Méthode pour lire un fichier à partir du nœud
 	public String readFile(String fileName) {
 		// Parcourir la liste des fichiers pour rechercher le fichier spécifié
 		for (String file : files) {
@@ -203,10 +216,6 @@ public class ChordNode {
 		}
 		// Si le fichier n'est pas trouvé, vous pouvez retourner un message indiquant qu'il n'existe pas
 		return "Le fichier " + fileName + " n'existe pas sur ce nœud.";
-	}
-
-	public String getNodeUrl() {
-		return nodeUrl;
 	}
 
 }
