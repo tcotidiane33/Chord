@@ -1,96 +1,69 @@
 package kmaru.jchord;
 
-import java.util.ArrayList;
-import java.util.List;
+public class ChordKey {
+    private String key;
 
-import com.sun.org.apache.xalan.internal.xsltc.util.IntegerArray;
+    public ChordKey(String key) {
+        this.key = key;
+    }
 
-public class ChordKey implements Comparable {
+    public String getKey() {
+        return key;
+    }
 
-	String identifier;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ChordKey chordKey = (ChordKey) o;
+        return key.equals(chordKey.key);
+    }
 
-	byte[] key;
+    @Override
+    public int hashCode() {
+        return key.hashCode();
+    }
 
-	public ChordKey(byte[] key) {
-		this.key = key;
-	}
+    @Override
+    public String toString() {
+        return "ChordKey{" +
+                "key='" + key + '\'' +
+                '}';
+    }
 
-	public ChordKey(String identifier) {
-		this.identifier = identifier;
-		this.key = Hash.hash(identifier);
-	}
+    public boolean isBetween(ChordKey startKey, ChordKey endKey) {
+        // Comparer cette clé avec startKey et endKey
+        // Si cette clé est supérieure ou égale à startKey et inférieure à endKey (dans l'ordre circulaire),
+        // alors elle est entre les deux
+        return this.getKey().compareTo(startKey.getKey()) >= 0 && this.getKey().compareTo(endKey.getKey()) < 0;
+    }
 
-	public boolean isBetween(ChordKey fromKey, ChordKey toKey) {
-		if (fromKey.compareTo(toKey) < 0) {
-			if (this.compareTo(fromKey) > 0 && this.compareTo(toKey) < 0) {
-				return true;
-			}
-		} else if (fromKey.compareTo(toKey) > 0) {
-			if (this.compareTo(toKey) < 0 || this.compareTo(fromKey) > 0) {
-				return true;
-			}
-		}
-		return false;
-	}
+    public ChordKey createNextKey() {
+        // Implémentez la logique pour générer la clé suivante dans la séquence de clés
+        // Cela dépendra de la manière dont vous définissez la séquence de clés dans votre système Chord
+        // Par exemple, si vous utilisez une séquence linéaire ou un anneau, vous devez générer la clé suivante dans cet ordre
 
-	public ChordKey createStartKey(int index) {
-		byte[] newKey = new byte[key.length];
-		System.arraycopy(key, 0, newKey, 0, key.length);
-		int carry = 0;
-		for (int i = (Hash.KEY_LENGTH - 1) / 8; i >= 0; i--) {
-			int value = key[i] & 0xff;
-			value += (1 << (index % 8)) + carry;
-			newKey[i] = (byte) value;
-			if (value <= 0xff) {
-				break;
-			}
-			carry = (value >> 8) & 0xff;
-		}
-		return new ChordKey(newKey);
-	}
+        // Ici, nous supposons que vous avez une méthode getNextKey() qui génère la clé suivante dans la séquence
+        // Utilisez cette méthode pour obtenir la clé suivante
+        return getNextKey();
+    }
 
-	public int compareTo(Object obj) {
-		ChordKey targetKey = (ChordKey) obj;
-		for (int i = 0; i < key.length; i++) {
-			int loperand = (this.key[i] & 0xff);
-			int roperand = (targetKey.getKey()[i] & 0xff);
-			if (loperand != roperand) {
-				return (loperand - roperand);
-			}
-		}
-		return 0;
-	}
+    private ChordKey getNextKey() {
+        // Supposez que vous avez une implémentation qui retourne la clé suivante dans votre séquence de clés
+        // Cela pourrait être basé sur une séquence linéaire, un anneau ou toute autre structure que vous utilisez dans votre système Chord
 
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		if (key.length > 4) {
-			for (int i = 0; i < key.length; i++) {
-				sb.append(Integer.toString(((int) key[i]) & 0xff) + ".");
-			}
-		} else {
-			long n = 0;
-			for (int i = key.length-1,j=0; i >= 0 ; i--, j++) {
-				n |= ((key[i]<<(8*j)) & (0xffL<<(8*j)));
-			}
-			sb.append(Long.toString(n));
-		}
-		return sb.substring(0, sb.length() - 1).toString();
-	}
+        // Exemple simple : incrémentation de la valeur de la clé actuelle
+        // Notez que ceci est un exemple fictif et vous devez adapter cette logique à votre propre implémentation
+        int currentValue = Integer.parseInt(key); // Supposez que la valeur de la clé est stockée sous forme d'entier dans key
+        int nextValue = currentValue + 1; // Générer la valeur suivante dans la séquence
+        return new ChordKey(String.valueOf(nextValue)); // Retourner une nouvelle instance de ChordKey avec la valeur suivante
+    }
 
-	public String getIdentifier() {
-		return identifier;
-	}
-
-	public void setIdentifier(String identifier) {
-		this.identifier = identifier;
-	}
-
-	public byte[] getKey() {
-		return key;
-	}
-
-	public void setKey(byte[] key) {
-		this.key = key;
-	}
+    public ChordKey createStartKey(int i) {
+        // Générer une clé en fonction de l'index i
+        String keyString = "start_key_" + i; // Exemple de génération de clé à partir de l'index i
+        // Supposons que ChordKey ait un constructeur prenant une chaîne en tant que paramètre pour créer une clé
+        return new ChordKey(keyString);
+    }
 
 }

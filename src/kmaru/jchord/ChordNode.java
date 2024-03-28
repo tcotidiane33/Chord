@@ -1,221 +1,206 @@
 package kmaru.jchord;
 
-import java.io.PrintStream;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ChordNode {
+	private String nodeId;
+	private ChordKey nodeKey;
+	private ChordNode predecessor;
 
-	String nodeId;
-	ChordKey nodeKey;
-	ChordNode predecessor;
-	ChordNode successor;
-	FingerTable fingerTable;
-	Map<String, String> data; // Structure de données pour stocker les données
+	private ChordNode successor;
+	private FingerTable fingerTable;
+	private Map<String, String> data;
+	private final int numOfNodes;
 	private String nodeUrl;
-	private List<String> files;
+	private static final int NUM_OF_NODES = 5;
+    private Finger[] fingers;
 
+
+    public ChordNode(String nodeId, String nodeUrl, int numOfNodes) {
+		this.nodeId = nodeId;
+		this.nodeKey = new ChordKey(nodeId);
+		this.fingerTable = new FingerTable(this);
+		this.nodeUrl = nodeUrl;
+		this.create();
+		this.data = new HashMap<>();
+		this.numOfNodes = numOfNodes;
+	}
 
 	public ChordNode(String nodeId) {
 		this.nodeId = nodeId;
 		this.nodeKey = new ChordKey(nodeId);
+		this.numOfNodes = 0;
 		this.fingerTable = new FingerTable(this);
 		this.create();
-		this.data = new HashMap<>(); // Initialisation de la structure de données
+		this.data = new HashMap<>();
 	}
 
-	// Ajouter cette méthode à la classe ChordNode
-	public Map<String, String> getAllData() {
-		return this.data;
+    public void create() {
+        predecessor = null;
+        successor = this;
+    }
+
+    public ChordNode findSuccessor(String identifier) {
+        return findSuccessor(new ChordKey(identifier));
+    }
+
+    public ChordNode findSuccessor(ChordKey key) {
+        if (successor == null || key.isBetween(this.getNodeKey(), successor.getNodeKey())) {
+            return successor;
+        } else {
+            ChordNode node = closestPrecedingNode(key);
+            if (node == this) {
+                return successor.findSuccessor(key);
+            }
+            return node.findSuccessor(key);
+        }
+    }
+
+    private ChordNode closestPrecedingNode(ChordKey key) {
+        for (int i = Hash.KEY_LENGTH - 1; i >= 0; i--) {
+            Finger finger = fingerTable.getFinger(i);
+            ChordKey fingerKey = finger.getNode().getNodeKey();
+            if (fingerKey.isBetween(this.getNodeKey(), key)) {
+                return finger.getNode();
+            }
+        }
+        return this;
+    }
+	public ChordNode getSuccessor() {
+		return successor;
 	}
 
-
-	// Méthode pour ajouter des données au nœud
-	public void addData(String key, String value) {
-		data.put(key, value);
+    public void stabilize() {
+        ChordNode node = successor.getPredecessor();
+        if (node != null) {
+            ChordKey key = node.getNodeKey();
+            if ((this == successor) || key.isBetween(this.getNodeKey(), successor.getNodeKey())) {
+                successor = node;
+            }
+        }
+        successor.notifyPredecessor(this);
+    }
+	ChordNode getPredecessor() {
+		return predecessor;
 	}
 
-	// Méthode pour récupérer les données du nœud associées à une clé donnée
-	public String getData(String key) {
-		return data.get(key);
-	}
-
-	public ChordNode findSuccessor(String identifier) {
-		ChordKey key = new ChordKey(identifier);
-		return findSuccessor(key);
-	}
-
-	public ChordNode findSuccessor(ChordKey key) {
-		if (this == successor) {
-			return this;
-		}
-
-		if (key.isBetween(this.getNodeKey(), successor.getNodeKey()) || key.compareTo(successor.getNodeKey()) == 0) {
-			return successor;
-		} else {
-			ChordNode node = closestPrecedingNode(key);
-			if (node == this) {
-				return successor.findSuccessor(key);
-			}
-			return node.findSuccessor(key);
-		}
-	}
-
-	public void stopNode() {
-		// Logique pour arrêter le nœud
-		// Par exemple :
-		// Fermer les connexions, arrêter les threads, libérer les ressources, etc.
-		System.out.println("Node stopped.");
-	}
-
-	private ChordNode closestPrecedingNode(ChordKey key) {
-		for (int i = Hash.KEY_LENGTH - 1; i >= 0; i--) {
-			Finger finger = fingerTable.getFinger(i);
-			ChordKey fingerKey = finger.getNode().getNodeKey();
-			if (fingerKey.isBetween(this.getNodeKey(), key)) {
-				return finger.getNode();
-			}
-		}
-		return this;
-	}
-
-	public void create() {
-		predecessor = null;
-		successor = this;
-	}
-
-	public void join(ChordNode node) {
-		predecessor = null;
-		successor = node.findSuccessor(this.getNodeId());
-	}
-
-	public void stabilize() {
-		ChordNode node = successor.getPredecessor();
-		if (node != null) {
-			ChordKey key = node.getNodeKey();
-			if ((this == successor) || key.isBetween(this.getNodeKey(), successor.getNodeKey())) {
-				successor = node;
-			}
-		}
-		successor.notifyPredecessor(this);
-	}
 
 	private void notifyPredecessor(ChordNode node) {
-		ChordKey key = node.getNodeKey();
-		if (predecessor == null || key.isBetween(predecessor.getNodeKey(), this.getNodeKey())) {
-			predecessor = node;
-		}
-	}
+        ChordKey key = node.getNodeKey();
+        if (predecessor == null || key.isBetween(predecessor.getNodeKey(), this.getNodeKey())) {
+            predecessor = node;
+        }
+    }
 
-	public void fixFingers() {
-		for (int i = 0; i < Hash.KEY_LENGTH; i++) {
-			Finger finger = fingerTable.getFinger(i);
-			ChordKey key = finger.getStart();
-			finger.setNode(findSuccessor(key));
-		}
-	}
+    public void fixFingers() {
+        for (int i = 0; i < Hash.KEY_LENGTH; i++) {
+            Finger finger = fingerTable.getFinger(i);
+            ChordKey key = finger.getStart();
+            finger.setNode(findSuccessor(key));
+        }
+    }
 
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("ChordNode[");
-		sb.append("ID=" + nodeId);
-		sb.append(",KEY=" + nodeKey);
-		sb.append("]");
-		return sb.toString();
-	}
+    public void stopNode() {
+        System.out.println("Node stopped.");
+    }
 
-	public void printFingerTable(PrintStream out) {
-		out.println("=======================================================");
-		out.println("FingerTable: " + this);
-		out.println("-------------------------------------------------------");
-		out.println("Predecessor: " + predecessor);
-		out.println("Successor: " + successor);
-		out.println("-------------------------------------------------------");
-		for (int i = 0; i < Hash.KEY_LENGTH; i++) {
-			Finger finger = fingerTable.getFinger(i);
-			out.println(finger.getStart() + "\t" + finger.getNode());
-		}
-		out.println("=======================================================");
-	}
+    public Map<String, String> getAllData() {
+        return new HashMap<>(data);
+    }
 
-	public String getNodeId() {
-		return nodeId;
-	}
+    public void addData(String key, String value) {
+        data.put(key, value);
+    }
 
-	public void setNodeId(String nodeId) {
-		this.nodeId = nodeId;
-	}
+    public String getData(String key) {
+        return data.get(key);
+    }
 
 	public ChordKey getNodeKey() {
 		return nodeKey;
 	}
 
-	public void setNodeKey(ChordKey nodeKey) {
-		this.nodeKey = nodeKey;
-	}
+    public List<String> getFiles() {
+        List<String> fileList = new ArrayList<>();
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            fileList.add(entry.getKey());
+        }
+        return fileList;
+    }
 
-	public ChordNode getPredecessor() {
-		return predecessor;
-	}
+    /**
+     * Définit le successeur de ce nœud.
+     *
+     * @param successor Le nœud successeur à définir.
+     */
+    public void setSuccessor(ChordNode successor) {
+        this.successor = successor;
+    }
 
-	public void setPredecessor(ChordNode predecessor) {
-		this.predecessor = predecessor;
-	}
+    /**
+     * Définit le prédécesseur de ce nœud.
+     *
+     * @param predecessor Le nœud prédécesseur à définir.
+     */
+    public void setPredecessor(ChordNode predecessor) {
+        this.predecessor = predecessor;
+    }
 
-	public ChordNode getSuccessor() {
-		return successor;
-	}
+    /**
+     * Obtient l'identifiant du nœud.
+     *
+     * @return L'identifiant du nœud.
+     */
+    public String getNodeId() {
+        return nodeId;
+    }
 
-	public void setSuccessor(ChordNode successor) {
-		this.successor = successor;
-	}
+    /**
+     * Obtient la table de doigts du nœud.
+     *
+     * @return La table de doigts du nœud.
+     */
+    public Map<Object, Object> getFingerTable() {
+        Map<Object, Object> fingerTableMap = new HashMap<>();
+        
+        for (int i = 0; i < fingers.length; i++) {
+            Finger finger = fingers[i];
+            if (finger != null) {
+                // Ajoutez les détails du doigt à la table de doigts
+                fingerTableMap.put("Finger " + i, finger);
+            }
+        }
+        return fingerTableMap;
+    }
 
-	public FingerTable getFingerTable() {
-		return fingerTable;
-	}
+    /**
+     * Lit un fichier à partir du nœud spécifié.
+     *
+     * @param node     Le nœud à partir duquel lire le fichier.
+     * @param fileName Le nom du fichier à lire.
+     */
+    public void readFile(ChordNode node, String fileName) {
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                // Traitez chaque ligne du fichier
+                System.out.println(line); // Par exemple, imprimez chaque ligne
+            }
+        } catch (IOException e) {
+            System.err.println("Erreur de lecture du fichier: " + e.getMessage());
+        }
+    }
 
-	public void setFingerTable(FingerTable fingerTable) {
-		this.fingerTable = fingerTable;
-	}
+    // Other methods...
 
-	public String getNodeUrl() {
-		return nodeUrl;
-	}
+    // Getter and setter methods...
 
-	public String readData(String key) {
-		ChordNode responsibleNode = findSuccessor(key);
-		if (responsibleNode != null) {
-			return responsibleNode.getData(key);
-		} else {
-			return null; // Ou une valeur par défaut, ou lever une exception selon le cas
-		}
-	}
-
-	public void removeData(String key) {
-		data.remove(key);
-	}
-
-	public ChordNode getSucc() {
-		return successor;
-	}
-
-	public List<String> getFiles() {
-		return this.files;
-	}
-
-	public String readFile(String fileName) {
-		// Parcourir la liste des fichiers pour rechercher le fichier spécifié
-		for (String file : files) {
-			if (file.equals(fileName)) {
-				// Si le fichier est trouvé, vous pouvez le lire ici
-				// Par exemple, vous pouvez lire le contenu du fichier et le retourner
-				return "Contenu du fichier " + fileName;
-			}
-		}
-		// Si le fichier n'est pas trouvé, vous pouvez retourner un message indiquant qu'il n'existe pas
-		return "Le fichier " + fileName + " n'existe pas sur ce nœud.";
-	}
+    // Helper methods...
 
 }

@@ -1,101 +1,106 @@
 package kmaru.jchord;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 public class Chord {
+    private List<ChordNode> nodeList = new ArrayList<>();
+    private SortedMap<ChordKey, ChordNode> sortedNodeMap = new TreeMap<>();
+    private int numOfNodes;
 
-	private List<ChordNode> nodeList = new ArrayList<>();
-	private SortedMap<ChordKey, ChordNode> sortedNodeMap = new TreeMap<>();
-	private Object[] sortedKeyArray;
-	private List<ChordNode> nodes = new ArrayList<>();
+    public Chord() {
+        this.numOfNodes = numOfNodes;
+    }
 
-	public void createNode(String nodeId) throws ChordException {
-		ChordNode node = new ChordNode(nodeId);
-		nodeList.add(node);
+    public void createNode(String nodeId) throws ChordException {
+        ChordNode node = new ChordNode(nodeId);
+        if (sortedNodeMap.containsKey(node.getNodeKey())) {
+            throw new ChordException("Duplicate Key: " + nodeId);
+        }
+        sortedNodeMap.put(node.getNodeKey(), node);
+        nodeList.add(node);
+    }
 
-		if (sortedNodeMap.get(node.getNodeKey()) != null) {
-			throw new ChordException("Duplicated Key: " + node);
-		}
+    public ChordNode getNode(int index) {
+        return index >= 0 && index < nodeList.size() ? nodeList.get(index) : null;
+    }
 
-		sortedNodeMap.put(node.getNodeKey(), node);
-		nodes.add(node); // Ajoutez le nouveau nœud à la liste `nodes`
-	}
+    public ChordNode getSortedNode(int index) {
+        if (index >= 0 && index < sortedNodeMap.size()) {
+            return new ArrayList<>(sortedNodeMap.values()).get(index);
+        }
+        return null;
+    }
 
-	public ChordNode getNode(int i) {
-		return nodeList.get(i);
-	}
+    public ChordNode findSuccessor(String key) {
+        return findSuccessor(new ChordKey(key));
+    }
 
-	public ChordNode getSortedNode(int i) {
-		if (sortedKeyArray == null) {
-			sortedKeyArray = sortedNodeMap.keySet().toArray();
-		}
-		return sortedNodeMap.get(sortedKeyArray[i]);
-	}
+    public ChordNode findSuccessor(ChordKey key) {
+        if (sortedNodeMap.isEmpty()) {
+            return null;
+        }
 
-	public ChordNode findSuccessor(String key) {
-		ChordKey chordKey = new ChordKey(key);
-		return findSuccessor(chordKey);
-	}
+        // Récupérer la première clé du tailMap
+        ChordKey firstKey = sortedNodeMap.tailMap(key).firstKey();
 
-	public void dropNode(int index) {
-		if (index >= 0 && index < nodeList.size()) {
-			nodeList.remove(index);
-			System.out.println("Node at index " + index + " removed successfully.");
-		} else {
-			System.out.println("Invalid node index.");
-		}
-	}
+        // Récupérer le nœud associé à la première clé
+        ChordNode successor = sortedNodeMap.getOrDefault(firstKey, sortedNodeMap.get(sortedNodeMap.firstKey()));
 
-	public ChordNode findSuccessor(ChordKey key) {
-		if (sortedNodeMap.isEmpty()) {
-			return null;
-		}
+        return successor;
+    }
 
-		if (key.compareTo(sortedNodeMap.lastKey()) > 0 || key.compareTo(sortedNodeMap.firstKey()) < 0) {
-			return sortedNodeMap.get(sortedNodeMap.firstKey());
-		}
 
-		ChordNode successor = sortedNodeMap.get(sortedNodeMap.tailMap(key).firstKey());
-		return successor != null ? successor : sortedNodeMap.get(sortedNodeMap.firstKey());
-	}
+    public int size() {
+        return numOfNodes;
+    }
 
-	public int size() {
-		return nodeList.size();
-	}
+    public void dropNode(int index) {
+        if (index >= 0 && index < nodeList.size()) {
+            ChordNode node = nodeList.remove(index);
+            sortedNodeMap.remove(node.getNodeKey());
+            System.out.println("Node at index " + index + " removed successfully.");
+        } else {
+            System.out.println("Invalid node index.");
+        }
+    }
 
-	public void stop() {
-		// Arrêter tous les nœuds du réseau
-		for (ChordNode node : nodes) {
-			node.stopNode();
-		}
+    /**
+     * Supprime un nœud de l'anneau Chord.
+     * @param node Le nœud à supprimer.
+     */
+    public void removeNode(ChordNode node) {
+        // Mettre à jour le successeur du prédécesseur du nœud à supprimer
+        ChordNode predecessor = node.getPredecessor();
+        ChordNode successor = node.getSuccessor();
+        if (predecessor != null) {
+            predecessor.setSuccessor(successor);
+        }
+        // Mettre à jour le prédécesseur du successeur du nœud à supprimer
+        if (successor != null) {
+            successor.setPredecessor(predecessor);
+        }
+        // Réorganiser la table de hachage distribuée des clés si nécessaire
+        // Cela dépend de votre implémentation spécifique et des règles de redistribution des clés
+        // dans le cas de la suppression d'un nœud de l'anneau Chord.
+    }
 
-		// Fermeture des connexions réseau
-		// Exemple :
-		// for (Connection connection : openConnections) {
-		//     connection.close();
-		// }
+    /**
+     * Ajoute une paire clé-valeur de données à l'anneau Chord.
+     * @param key La clé de la paire clé-valeur.
+     * @param value La valeur associée à la clé.
+     */
+    public void addData(String key, String value) {
+        // Trouver le nœud responsable de la clé à l'aide de l'algorithme Chord
+        ChordNode responsibleNode = findSuccessor(key);
+        // Stocker la paire clé-valeur sur le nœud responsable
+        if (responsibleNode != null) {
+            responsibleNode.addData(key, value);
+        } else {
+            // Gérer le cas où aucun nœud responsable n'est trouvé pour la clé donnée
+            System.err.println("Aucun nœud responsable trouvé pour la clé : " + key);
+        }
+    }
 
-		// Libération de la mémoire ou nettoyage des structures de données
-		// Exemple :
-		// temporaryData.clear();
 
-		// Fermeture des fichiers ouverts
-		// Exemple :
-		// for (File file : openFiles) {
-		//     file.close();
-		// }
-
-		// Arrêt des threads ou tâches en cours
-		// Exemple :
-		// for (Thread thread : runningThreads) {
-		//     thread.interrupt();
-		// }
-
-		// Afficher un message de confirmation
-		System.out.println("Le système Chord a été arrêté avec succès.");
-	}
-
+    // Other methods...
 }
